@@ -1,5 +1,7 @@
+ENV['SWIFT_VERSION'] = '3'
 platform :ios, '9.0'
 require_relative '../node_modules/@react-native-community/cli-platform-ios/native_modules'
+
 
 target 'SelfBalancingControllerApp' do
   # Pods for SelfBalancingControllerApp
@@ -34,6 +36,9 @@ target 'SelfBalancingControllerApp' do
   pod 'glog', :podspec => '../node_modules/react-native/third-party-podspecs/glog.podspec'
   pod 'Folly', :podspec => '../node_modules/react-native/third-party-podspecs/Folly.podspec'
 
+  pod 'react-native-ble-plx', :path => '../node_modules/react-native-ble-plx'
+  pod 'react-native-ble-plx-swift', :path => '../node_modules/react-native-ble-plx'
+
   target 'SelfBalancingControllerAppTests' do
     inherit! :search_paths
     # Pods for testing
@@ -41,6 +46,7 @@ target 'SelfBalancingControllerApp' do
 
   use_native_modules!
 end
+
 
 target 'SelfBalancingControllerApp-tvOS' do
   # Pods for SelfBalancingControllerApp-tvOS
