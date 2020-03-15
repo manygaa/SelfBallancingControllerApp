@@ -1,0 +1,29 @@
+../
+SelfBalancingControllerApp/
+| .expo/
+| .git/
+| .vscode/
+| __tests__/
+| android/
+| bin/
+| component/
+| ios/
+| node_modules/
+| .buckconfig
+| .classpath
+| .eslintrc.js
+| .flowconfig
+| .gitattributes
+| .gitignore
+| .prettierrc.js
+| .project
+| .watchmanconfig
+| App.js
+| app.json
+| babel.config.js
+| index.js
+| metro.config.js
+| package-lock.json
+| package.json
+| yarn.lock
+| .App.js.swp
