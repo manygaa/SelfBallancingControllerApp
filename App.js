@@ -9,7 +9,7 @@ const App: () => React$Node = () => {
   return (
     <>
       <NavigationContainer>
-        <Drawer.Navigator initialRouteName="Main">
+        <Drawer.Navigator initialRouteName="Home">
           <Drawer.Screen name="Home" component={Home} />
         </Drawer.Navigator>
       </NavigationContainer>

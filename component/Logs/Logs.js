@@ -1,12 +1,36 @@
 import * as React from 'react';
-import {Button, Text, View} from 'react-native';
+import {Button, Text, View, ScrollView} from 'react-native';
+import {readLogsFile, logInfo, logError, logWarning} from '../../service/logsService.js'
+import Loader from '../Loader/Loader.js';
 
-const Logs = ({navigation}) => {
-  return (
-    <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
-      <Text>Logi</Text>
-    </View>
-  );
+
+export default class Logs extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { content: null };
+  }
+
+  componentDidMount = async() => {
+    logInfo('no dupa3');
+    logError('no dupa4');
+
+    this.setState({content: await readLogsFile()})
+  }
+
+
+    render () {
+      if (!this.state.content) {
+        return (
+            <Loader/>
+        )
+      } else {
+        return (
+          <View>
+            <ScrollView>
+              <Text>{this.state.content}</Text>
+            </ScrollView>
+          </View>
+        );
+      }
+    }
 };
-
-export default Logs;
