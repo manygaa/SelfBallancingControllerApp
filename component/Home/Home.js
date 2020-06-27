@@ -4,6 +4,7 @@ import Main from '../Main/Main.js';
 import Logs from '../Logs/Logs.js';
 import Settings from '../Settings/Settings.js';
 import {StyleSheet, SafeAreaView} from 'react-native';
+import DropdownAlert from 'react-native-dropdownalert';
 
 const Tab = createBottomTabNavigator();
 
@@ -16,13 +17,14 @@ const Home = () => {
         <Tab.Screen name="Logs" component={Logs} />
         <Tab.Screen name="Settings" component={Settings} />
       </Tab.Navigator>
+      <DropdownAlert ref={ref => this.dropDownAlertRef = ref} />
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flex: 1
   },
 });
 

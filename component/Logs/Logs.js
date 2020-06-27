@@ -1,36 +1,37 @@
-import * as React from 'react';
+import React, { useState, useEffect } from 'react';
 import {Button, Text, View, ScrollView} from 'react-native';
-import {readLogsFile, logInfo, logError, logWarning} from '../../service/logsService.js'
+import {readLogsFile} from '../../service/logsService.js'
 import Loader from '../Loader/Loader.js';
 
 
-export default class Logs extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { content: null };
+const Logs = ({navigation}) => {
+  const [logsFile, setLogsFile] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getLogs();
+  });
+
+
+
+  getLogs = async() => {
+    try {
+      setLogsFile(await readLogsFile());
+    } catch (error) {
+      dropDownAlertRef.alertWithType('error', 'Error', `getLogs() Error: ${error.message}`);
+    } finally {
+      setLoading(false);
+}
   }
 
-  componentDidMount = async() => {
-    logInfo('no dupa3');
-    logError('no dupa4');
-
-    this.setState({content: await readLogsFile()})
-  }
-
-
-    render () {
-      if (!this.state.content) {
-        return (
-            <Loader/>
-        )
-      } else {
-        return (
-          <View>
-            <ScrollView>
-              <Text>{this.state.content}</Text>
-            </ScrollView>
-          </View>
-        );
-      }
-    }
+  return (
+    <View>
+      <Loader active={loading}/>
+      <ScrollView>
+        <Text>{logsFile}</Text>
+      </ScrollView>
+    </View>
+  )
 };
+
+export default Logs;

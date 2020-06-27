@@ -21,12 +21,13 @@ const addLog = async(text, type) => {
     text = `${await readLogsFile()}\n${text}`;
   }
 
-  RNFS.writeFile(logsFile, `${text}`, 'utf8')
+  await RNFS.writeFile(logsFile, `${text}`, 'utf8')
     .then((success) => {
       console.log('FILE WRITTEN!');
     })
     .catch((err) => {
       console.log(err.message);
+      throw err.message
   });
 }
 
@@ -43,9 +44,18 @@ export const logError = async(text) => {
 }
 
 export const readLogsFile = async() => {
-  try {
-    return await RNFS.readFile(logsFile, 'utf8');
-  } catch (err) {
-    console.log(err.message);
+
+  if (await RNFS.exists(logsFile)) {
+
+    try {
+      return await RNFS.readFile(logsFile, 'utf8');
+    } catch (err) {
+      console.log(err.message);
+      throw err.message;
+    }
+  } else {
+    return null;
   }
+
+
 }

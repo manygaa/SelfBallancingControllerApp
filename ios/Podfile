@@ -38,6 +38,8 @@ target 'SelfBalancingControllerApp' do
 
 
 
+  pod 'react-native-ble-plx', :path => '../node_modules/react-native-ble-plx'
+
   target 'SelfBalancingControllerAppTests' do
     inherit! :search_paths
     # Pods for testing
