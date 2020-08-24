@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import {Button, Text, View} from 'react-native';
 import {scanningDevices} from '../../service/bluetoothService.js';
 
 const Bluetooth = () => {
-
   const [connect, setConnect] = useState(false);
 
   scanningDevices();
