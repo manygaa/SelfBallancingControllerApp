@@ -1,48 +1,99 @@
-import {BleManager} from 'react-native-ble-plx';
+import {BleManager, Service} from 'react-native-ble-plx';
+import {config} from '../config/config.js';
 import React, {useState, useEffect} from 'react';
 import {Platform} from 'react-native';
 import {logInfo, logError} from './logsService.js';
+import base64 from 'react-native-base64'
 
-export const scanningDevices = async () => {
+export const runBluetooth = async () => {
   try {
     const blemanager = new BleManager();
+    const {platform} = config;
 
-    if (Platform.OS === 'ios') {
-      blemanager.onStateChange(state => {
+    console.log(`runBluetooth: SCANNING DEVICES`);
+
+    if (Platform.OS === platform) {
+      const subscription = blemanager.onStateChange(state => {
         if (state === 'PoweredOn') {
-          scanAndConnect(blemanager);
+          console.log(`runBluetooth(): state: ${state}`);
+          scanDevices(blemanager);
+          subscription.remove();
         } else {
-          console.log(`scanningDevices: state: ${state}`);
+          console.log(`runBluetooth(): state: ${state}`);
         }
       });
     } else {
       scanAndConnect(blemanager);
-      console.log(`scanningDevices: unrecognized platfrom ${Platform.OS}`);
+      console.log(`runBluetooth(): unrecognized platfrom ${Platform.OS}`);
     }
-  } catch (e) {
-    console.log(`error: ${e.message}`);
+  } catch (error) {
+    console.log(`runBluetooth(): error: ${error.message}`);
   }
 };
 
-const scanAndConnect = blemanager => {
-  blemanager.startDeviceScan(null, null, (error, device) => {
-    console.log(device);
+const scanDevices = async blemanager => {
+  const devicesList = [];
+  const {bluetoothPiName} = config;
 
-    if (error) {
-      console.log(error.message);
-      return;
-    }
+  try {
+    blemanager.startDeviceScan(null, null, (error, device) => {
+      const {name, id} = device;
+      const {bluetoothPiName} = config;
 
-    if (device.name === 'Pi') {
-      blemanager.stopDeviceScan();
-      device
-        .connect()
-        .then(device => {
-          console.log('Discovering services and characteristics');
-        })
-        .then(device => {
-          console.log('Setting notifications');
-        });
-    }
-  });
-};
+      if (name === bluetoothPiName) {
+        console.log(`scanDevices(): Find Mr Roobot device: ${name} ${id}`);
+        blemanager.stopDeviceScan();
+        connectToDevice(device, blemanager);
+      } else if (name !== null && !devicesList.includes(name)) {
+        devicesList.push(name);
+        console.log(`scanDevices(): Find device: name=${name} id${id}`);
+      }
+    });
+
+  } catch (error) {
+    console.log(`scanDevices(): error: ${error.message}`);
+  }
+}
+
+const connectToDevice = async (device, blemanager) => {
+  try {
+    await device.connect();
+    await device.discoverAllServicesAndCharacteristics();
+    const services = await device.services();
+    const [controllerService] = services;
+    const characteristics = await controllerService.characteristics();
+    const [controllerCharacteristic] = characteristics;
+    await communicationWithDevice(device, controllerCharacteristic);
+
+  } catch (error) {
+    console.log(`connectToDevice():s error: ${error.message}`);
+  }
+}
+
+const communicationWithDevice = async (connectedDevice, serviceAndCharacteristics) => {
+  try {
+    const response = await serviceAndCharacteristics.writeWithResponse('aGVsbG8gbWlzcyB0YXBweQ==');
+    // const response1 = await connectedDevice.monitorCharacteristicForService(
+    //   serviceAndCharacteristics.serviceUUID,
+    //   serviceAndCharacteristics.uuid,
+    //   listnerDevice);
+
+
+
+    // const listener = await serviceAndCharacteristics.monitorCharacteristic(
+    //   serviceAndCharacteristics.uuid,
+    //   listnerDevice
+    // )
+
+
+    console.log(`communicationWithDevice(): ${response}`);
+    // console.log(`communicationWithDevice(): ${listener}`);
+
+  } catch (error) {
+    console.log(`communicationWithDevice(): error: ${error.message}`);
+  }
+}
+
+const listnerDevice = (error, value) => {
+  console.log(`listnerDevice(): value: ${value} error: ${error}`);
+}

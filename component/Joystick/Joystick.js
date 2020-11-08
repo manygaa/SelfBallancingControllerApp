@@ -1,22 +1,20 @@
 import React, {useState, useEffect} from 'react';
 import {Button, Text, View} from 'react-native';
-import GamepadController from 'react-native-gamepad-controller';
-
+import AxisPad from 'react-native-axis-pad';
 
 const Joystick = () => {
-  const [joystick, setJoystick] = useState(false);
-
-  onGamepadData = (data) => {
-    setJoystick(JSON.stringify(data));
-  }
-
 
   return (
-    <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
-      <GamepadController onData={(data)=>{ onGamepadData(data) }} />
-      <Text>{this.state.joystick}</Text>
-    </View>
-  );
+    <AxisPad
+      resetOnRelease={true}
+      autoCenter={true}
+      onValue={({ x, y }) => {
+          console.log(x, y);
+      }}>
+      <Text>GO</Text>
+    </AxisPad>
+  )
+
 };
 
-export default Bluetooth;
+export default Joystick;

@@ -1,11 +1,11 @@
 import React, {useState, useEffect} from 'react';
 import {Button, Text, View} from 'react-native';
-import {scanningDevices} from '../../service/bluetoothService.js';
+import {runBluetooth} from '../../service/bluetoothService.js';
 
 const Bluetooth = () => {
   const [connect, setConnect] = useState(false);
 
-  scanningDevices();
+  runBluetooth();
 
   return (
     <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
