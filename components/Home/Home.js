@@ -5,14 +5,14 @@ import Logs from '../Logs/Logs.js';
 import Settings from '../Settings/Settings.js';
 import {StyleSheet, SafeAreaView} from 'react-native';
 import DropdownAlert from 'react-native-dropdownalert';
+import {Styles} from './HomeStyles.js';
 
 const Tab = createBottomTabNavigator();
 
 const Home = () => {
   return (
-
-    <SafeAreaView style={styles.container}>
-      <Tab.Navigator>
+    <SafeAreaView style={Styles.container}>
+      <Tab.Navigator sceneContainerStyle={Styles.bottomMenu}>
         <Tab.Screen name="Home" component={Main} />
         <Tab.Screen name="Logs" component={Logs} />
         <Tab.Screen name="Settings" component={Settings} />
@@ -21,11 +21,5 @@ const Home = () => {
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1
-  },
-});
 
 export default Home;

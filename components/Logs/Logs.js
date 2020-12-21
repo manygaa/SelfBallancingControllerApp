@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {Button, Text, View, ScrollView} from 'react-native';
-import {readLogsFile} from '../../service/logsService.js'
+import {readLogsFile} from '../../service/LogsService.js'
 import Loader from '../Loader/Loader.js';
 
 

@@ -1,4 +1,4 @@
-import {getCurrentDate, getDate} from './timeService.js'
+import {getCurrentDate, getDate} from './TimeService.js'
 const RNFS = require('react-native-fs');
 
 const logsFile = `${RNFS.DocumentDirectoryPath}/${getCurrentDate()}.txt`;
