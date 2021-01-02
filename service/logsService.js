@@ -1,61 +1,44 @@
-import {getCurrentDate, getDate} from './TimeService.js'
-const RNFS = require('react-native-fs');
+import RNFS from'react-native-fs';
+import { config } from '../config/config.js';
+import { FileLogger, LogLevel } from "react-native-file-logger";
 
-const logsFile = `${RNFS.DocumentDirectoryPath}/${getCurrentDate()}.txt`;
+export const getAllLogs = async () => {
+    const allFiles = await RNFS.readDir(`${RNFS.DocumentDirectoryPath}/logs`);
 
-const addLog = async(text, type) => {
+    const readAllFiles = [];
 
-  switch (type) {
-    case 'info': {
-      text = `${getDate()} Info: ${text}`; break;
+    for (const file of allFiles) {
+        const statResult = await Promise.all([RNFS.stat(file.path), file.path]);
+        const [tempIsFile, tempFile] = statResult;
+
+        if (tempIsFile.isFile()) {
+            try {
+                const content = await RNFS.readFile(tempFile, 'utf8');
+                    if (typeof content === 'string') {
+                        const fileShortName = tempFile.split(" ").pop();
+
+                        readAllFiles.push({
+                            content: content,
+                            filePath: tempFile,
+                            fileShortName: fileShortName
+                            
+                        });
+                    }
+            } catch (error) {
+                console.log('getLogsFiles()  ' + error);
+            } 
+        }
     }
-    case 'warning': {
-      text = `${getDate()} Warrnig: ${text}`; break;
-    }
-    case 'error': {
-      text = `${getDate()} Error: ${text}`; break;
-    }
-  }
 
-  if (await RNFS.exists(logsFile)) {
-    text = `${await readLogsFile()}\n${text}`;
-  }
-
-  await RNFS.writeFile(logsFile, `${text}`, 'utf8')
-    .then((success) => {
-      console.log('FILE WRITTEN!');
-    })
-    .catch((err) => {
-      console.log(err.message);
-      throw err.message
-  });
+    return readAllFiles;
 }
 
-export const logInfo = async(text) => {
-  await addLog(text, 'info');
+export const runLogger = async () => {
+    createLogsDirectory();
+    FileLogger.configure(config.loggerOptions);
 }
 
-export const logWarning = async(text) => {
-  await addLog(text, 'warning');
-}
-
-export const logError = async(text) => {
-  await addLog(text, 'error');
-}
-
-export const readLogsFile = async() => {
-
-  if (await RNFS.exists(logsFile)) {
-
-    try {
-      return await RNFS.readFile(logsFile, 'utf8');
-    } catch (err) {
-      console.log(err.message);
-      throw err.message;
-    }
-  } else {
-    return null;
-  }
-
-
+const createLogsDirectory = async () => {
+    RNFS.mkdir(`${RNFS.DocumentDirectoryPath}/logs`);
+    FileLogger.write(LogLevel.Info, 'Crate logger directory!');
 }

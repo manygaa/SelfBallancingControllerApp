@@ -11,7 +11,6 @@ import { Provider } from 'react-redux';
 
 const RNRedux = () => {
     return (
-    
         <Provider store={store}>
             <App />
         </Provider>

@@ -8,10 +8,11 @@ export const bluetoothColor = {
 export const bluetoothText = {
   connect: 'Connect',
   connecting: 'Connecting...',
-  looking: 'Looking for ',
+  looking: 'Looking ',
   failed: 'Failed',
   turnedOff: 'Turned off',
-  TurnOn: 'Turn bluetooth on'
+  turnOn: 'Turn bluetooth on',
+  timeout: 'not found, timeout'
 }
 
 export const blinkingDelayTime = {

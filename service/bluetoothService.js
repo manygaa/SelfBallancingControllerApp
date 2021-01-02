@@ -2,7 +2,6 @@ import { BleManager, Service } from 'react-native-ble-plx';
 import * as Actions from '../actions/Bluetooth.js'
 import { config } from '../config/config.js';
 import { Platform } from 'react-native';
-import { logInfo, logError } from './LogsService.js';
 import base64 from 'react-native-base64'
 import store from '../store/ConfigureStore.js';
 import { bindActionCreators } from 'redux';
@@ -21,7 +20,11 @@ export const runBluetooth = async () => {
 		console.log(`runBluetooth: SCANNING DEVICES`);
 
 		if (Platform.OS === platform) {
-			actionCreators.changeBluetoothStatus({text: bluetoothText.TurnOn ,color: bluetoothColor.connecting, blinking: blinkingDelayTime.connecting});
+			actionCreators.changeBluetoothStatus({
+				text: bluetoothText.turnOn, 
+				color: bluetoothColor.connecting, 
+				blinking: blinkingDelayTime.connecting
+			});
 
 			const subscription = blemanager.onStateChange(state => {
 				if (state === 'PoweredOn') {
@@ -37,7 +40,11 @@ export const runBluetooth = async () => {
 			console.log(`runBluetooth(): unrecognized platfrom ${Platform.OS}`);
 		}
 	} catch (error) {
-		actionCreators.changeBluetoothStatus({text: bluetoothText.failed, color: bluetoothColor.failed, blinking: blinkingDelayTime.notBlinking});
+		actionCreators.changeBluetoothStatus({
+			text: bluetoothText.failed, 
+			color: bluetoothColor.failed, 
+			blinking: blinkingDelayTime.notBlinking
+		});
 		console.log(`runBluetooth(): error: ${error.message}`);
 	}
 };
@@ -48,10 +55,16 @@ const scanDevices = async (blemanager) => {
 
 	try {
 		blemanager.startDeviceScan(null, null, (error, device) => {
-
 			const { name, id } = device;
-			const { bluetoothPiName } = config;
-			actionCreators.changeBluetoothStatus({text: `${bluetoothText.looking} ${bluetoothPiName}` ,color: bluetoothColor.connecting, blinking: blinkingDelayTime.lookingDevice});
+			const { bluetoothPiName, timeoutScanTime } = config;
+
+			setTimeout(() => timeoutScan(blemanager), timeoutScanTime);
+
+			actionCreators.changeBluetoothStatus({
+				text: `${bluetoothText.looking} ${bluetoothPiName}`,
+				color: bluetoothColor.connecting, 
+				blinking: blinkingDelayTime.lookingDevice
+			});
 
 			if (name === bluetoothPiName) {
 				console.log(`scanDevices(): Find Mr Roobot device: ${name} ${id}`);
@@ -60,11 +73,15 @@ const scanDevices = async (blemanager) => {
 			} else if (name !== null && !devicesList.includes(name)) {
 				devicesList.push(name);
 				console.log(`scanDevices(): Find device: name=${name} id${id}`);
-			}
+			} 
 		});
 
 	} catch (error) {
-		actionCreators.changeBluetoothStatus({text: bluetoothText.failed, color: bluetoothColor.failed, blinking: blinkingDelayTime.notBlinking});
+		actionCreators.changeBluetoothStatus({
+			text: bluetoothText.failed, 
+			color: bluetoothColor.failed, blinking: 
+			blinkingDelayTime.notBlinking
+		});
 		console.log(`scanDevices(): error: ${error.message}`);
 	}
 }
@@ -80,22 +97,43 @@ const connectToDevice = async (device) => {
 		const characteristics = await controllerService.characteristics();
 		const [controllerCharacteristic] = characteristics;
 
-		actionCreators.changeBluetoothStatus({text: bluetoothText.connect, color: bluetoothColor.connect, blinking: blinkingDelayTime.notBlinking});
+		actionCreators.changeBluetoothStatus({
+			text: bluetoothText.connect, 
+			color: bluetoothColor.connect, 
+			blinking: blinkingDelayTime.notBlinking
+		});
 		CONNECTED_DEVICE = controllerCharacteristic;
 		connectionMonitoring();
 
 	} catch (error) {
-		actionCreators.changeBluetoothStatus({text: bluetoothText.failed, color: bluetoothColor.failed, blinking: blinkingDelayTime.notBlinking});
+		actionCreators.changeBluetoothStatus({
+			text: bluetoothText.failed, color: 
+			bluetoothColor.failed, blinking: 
+			blinkingDelayTime.notBlinking});
 		console.log(`connectToDevice():s error: ${error.message}`);
 	}
 }
 
 const connectionMonitoring = () => {
+	const {pingIntervalTime} = config; 
+
 	setInterval(() => {
 		if (CONNECTED_DEVICE != null) {
 			communicationWithDevice("ping");
 		}
-	}, 3000);
+	}, pingIntervalTime);
+}
+
+const timeoutScan = (blemanager) => {
+	const {bluetoothPiName} = config;
+	const actionCreators = bindActionCreators(Actions, store.dispatch);
+
+	blemanager.stopDeviceScan();
+	actionCreators.changeBluetoothStatus({
+		text: `${bluetoothPiName} ${bluetoothText.timeout}`, 
+		color: bluetoothColor.failed, 
+		blinking: blinkingDelayTime.notBlinking
+	});
 }
 
 const monitorDevice = () => {
