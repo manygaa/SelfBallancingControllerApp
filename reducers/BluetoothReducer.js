@@ -2,6 +2,7 @@ import {BLUETOOTH} from '../constans/GlobalConstans.js';
 import { bluetoothText, bluetoothColor, blinkingDelayTime } from '../constans/BluetoothConst.js';
 
 const initialState = {
+    isOn: false,
     text: bluetoothText.turnedOff,
     color: bluetoothColor.turnedOff,
     blinking: blinkingDelayTime.notBlinking

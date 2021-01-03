@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Text, View, ScrollView } from 'react-native';
+import { View, ScrollView } from 'react-native';
 import { getAllLogs } from '../../service/LogsService.js';
 import Loader from '../Loader/Loader.js';
 import RNPickerSelect from 'react-native-picker-select';
-
+import ParsedText from 'react-native-parsed-text';
+import { Styles, pickerSelectStyles } from './LogsStyles.js';
+import { selectLogsplaceholder } from '../../constans/LogsConstans.js';
+import { ArrowIcon } from '../../icon/SvgIcon.js';
 
 const Logs = () => {
 
@@ -11,6 +14,9 @@ const Logs = () => {
 	const [loading, setLoading] = useState(true);
 	const [logsContent, setLogsContent] = useState();
 
+	useEffect(() => {
+		getLogsFromService();
+	}, []);
 
 	const getLogsFromService = async () => {
 		const logs = await getAllLogs();
@@ -26,17 +32,15 @@ const Logs = () => {
 		}
 	}
 
-	useEffect(() => {
-		getLogsFromService();
-	}, []);
-
-
 	return (
-		<View>
+		<View style={Styles.container}>
 			<Loader active={loading} />
 			{logsFiles.length ?
 				<RNPickerSelect
 					onValueChange={(value) => setLogsContent(value)}
+					placeholder={{...selectLogsplaceholder}}
+					style={{...pickerSelectStyles}}
+					Icon={() => {return <ArrowIcon color="gray" />}}
 					items={logsFiles.map((log) => {
 						return {
 							label: log.fileShortName,
@@ -46,8 +50,19 @@ const Logs = () => {
 			: 
 				null
 			}
-			<ScrollView>
-				<Text>{logsContent}</Text>
+			<ScrollView style={Styles.logsContent}>
+				<ParsedText 
+					style={Styles.logsContentText}
+					parse={
+						[
+							{pattern: /\[INFO\]/, style: Styles.info},
+							{pattern: /\[WARN\]/, style: Styles.warning},
+							{pattern: /\[ERROR\]/, style: Styles.error},
+						]
+					}
+				>
+					{logsContent}
+				</ParsedText>
 			</ScrollView>
 		</View>
 	)

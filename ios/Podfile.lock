@@ -258,6 +258,8 @@ PODS:
     - ReactCommon/callinvoker (= 0.62.2)
   - RNCMaskedView (0.1.7):
     - React
+  - RNCPicker (1.8.1):
+    - React-Core
   - RNFileLogger (0.2.1):
     - CocoaLumberjack
     - React
@@ -309,6 +311,7 @@ DEPENDENCIES:
   - ReactCommon/callinvoker (from `../node_modules/react-native/ReactCommon`)
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
   - "RNCMaskedView (from `../node_modules/@react-native-community/masked-view`)"
+  - "RNCPicker (from `../node_modules/@react-native-community/picker`)"
   - RNFileLogger (from `../node_modules/react-native-file-logger`)
   - RNFS (from `../node_modules/react-native-fs`)
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
@@ -385,6 +388,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon"
   RNCMaskedView:
     :path: "../node_modules/@react-native-community/masked-view"
+  RNCPicker:
+    :path: "../node_modules/@react-native-community/picker"
   RNFileLogger:
     :path: "../node_modules/react-native-file-logger"
   RNFS:
@@ -436,6 +441,7 @@ SPEC CHECKSUMS:
   React-RCTVibration: 4356114dbcba4ce66991096e51a66e61eda51256
   ReactCommon: ed4e11d27609d571e7eee8b65548efc191116eb3
   RNCMaskedView: 90dd32f5b786bd562e876e1421ea77c700cbf71e
+  RNCPicker: 914b557e20b3b8317b084aca9ff4b4edb95f61e4
   RNFileLogger: 218ce00727e06709e1d5cf52054b5e1293f494ef
   RNFS: 2bd9eb49dc82fa9676382f0585b992c424cd59df
   RNGestureHandler: dde546180bf24af0b5f737c8ad04b6f3fa51609a
