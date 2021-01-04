@@ -6,7 +6,7 @@ export const config = {
   platform: 'ios',
   bluetoothPiName: 'raspberrypi',
   pingIntervalTime: 3000,
-  timeoutScanTime: 30000,
+  timeoutScanTime: 10000,
 
   // logs
   loggerOptions: {

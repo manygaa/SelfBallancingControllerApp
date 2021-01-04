@@ -1,14 +1,20 @@
-import React, { useState } from "react";
-import { Text } from 'react-native';
-import { NativeModules } from 'react-native';
+import React from "react";
+import { Text, Button, NativeModules } from 'react-native';
 import { SectionRow, SettingsPage, NavigateRow, BaseRow, SwitchRow } from 'react-native-settings-view';
-import store from '../../store/ConfigureStore.js';
-import { runBluetooth } from '../../service/BluetoothService.js';
+import { runBluetooth, disconnectBluetooth } from '../../service/BluetoothService.js';
+import { connect } from 'react-redux';
 
-const Settings = ({ navigation }) => {
+const Settings = ({ navigation, status }) => {
 
-    const {bluetoothState} = store.getState();
-    const [bluetoothIsOn, setBluetoothIsOn] = useState(bluetoothState.isOn);
+    const {bluetoothIsOn} = status;
+
+    const showDevMenu = () => {
+        NativeModules.DevMenu.show();
+    }
+
+    const toggleBluetooth = (isEnabled) => {
+        isEnabled ? runBluetooth() : disconnectBluetooth();
+    }
     
     return (
         <SettingsPage>
@@ -21,16 +27,14 @@ const Settings = ({ navigation }) => {
                     }}
                     onPress={() => navigation.navigate("ContactUs")}
                 />
-
                 <SwitchRow
                     text="Bluetooth"
                     enabled={bluetoothIsOn}
-                    enabled={false}
                     leftIcon={{
                         name: 'do-not-disturb',
                         type: 'material-community',
                     }}
-                    onValueChange={(isEnabled) => runBluetooth()}
+                    onValueChange={(isEnabled) => toggleBluetooth(isEnabled)}
                 />
                 <BaseRow
                     text={'version'}
@@ -41,16 +45,23 @@ const Settings = ({ navigation }) => {
                     rightContent={<Text>0.1.0</Text>}
                 />
             </SectionRow>
+            {
+                __DEV__ ?
+                 <Button
+                    title="Developer menu"
+                    onPress={() => showDevMenu()}
+                />
+                :
+                null
+            }
+
+
         </SettingsPage>
-        // <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
-        //   <Text>Settings</Text>
-        //   <Button title={'Show DevMenu'} onPress={showDevMenu}/>
-        // </View>
     );
 };
 
-const showDevMenu = () => {
-    NativeModules.DevMenu.show();
-}
+const mapStateToProps = state => ({
+	status: state.settingsReducer
+});
 
-export default Settings;
+export default connect(mapStateToProps)(Settings);
