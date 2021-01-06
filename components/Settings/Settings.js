@@ -27,6 +27,14 @@ const Settings = ({ navigation, status }) => {
                     }}
                     onPress={() => navigation.navigate("ContactUs")}
                 />
+                <NavigateRow
+                    text="Logs"
+                    leftIcon={{
+                        name: 'users',
+                        type: 'font-awesome',
+                    }}
+                    onPress={() => navigation.navigate("Logs")}
+                />
                 <SwitchRow
                     text="Bluetooth"
                     enabled={bluetoothIsOn}

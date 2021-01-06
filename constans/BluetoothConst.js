@@ -12,7 +12,9 @@ export const bluetoothText = {
   failed: 'Failed',
   turnedOff: 'Turned off',
   turnOn: 'Turn bluetooth on',
-  timeout: 'not found, timeout'
+  timeout: 'Not found, timeout!',
+  disconnect: 'Manually disconnect',
+  lostConnection: 'lost connection'
 }
 
 export const blinkingDelayTime = {

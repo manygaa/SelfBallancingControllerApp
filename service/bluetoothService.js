@@ -10,6 +10,8 @@ import { bluetoothText, bluetoothColor, blinkingDelayTime } from '../constans/Bl
 import { FileLogger, LogLevel } from "react-native-file-logger";
 
 let CONNECTED_DEVICE = null;
+let CONNECTED_DEVICE_CHARACTERISTIC = null;
+let MONITORING_DEVICE = null;
 
 export const runBluetooth = async () => {
 	const actionsBluetooth = bindActionCreators(ActionsBluetooth, store.dispatch);
@@ -58,6 +60,63 @@ export const runBluetooth = async () => {
 	}
 };
 
+export const communicationWithDevice = async (message) => {
+	const actionsBluetooth = bindActionCreators(ActionsBluetooth, store.dispatch);
+	const actionsSettings = bindActionCreators(ActionsSettings, store.dispatch);
+
+	try {
+		if (CONNECTED_DEVICE.isConnected()) {
+			const response = await CONNECTED_DEVICE_CHARACTERISTIC.writeWithResponse(base64.encode(message));
+			console.log(response);
+		} else {
+			actionsSettings.changeSettingsStatus({bluetoothIsOn: false});
+			actionsBluetooth.changeBluetoothStatus({
+				text: bluetoothText.lostConnection, 
+				color: bluetoothColor.failed, 
+				blinking: blinkingDelayTime.notBlinking
+			});
+		}
+
+	} catch (error) {
+		actionsSettings.changeSettingsStatus({bluetoothIsOn: false});
+		actionsBluetooth.changeBluetoothStatus({
+			text: bluetoothText.failed, 
+			color: bluetoothColor.failed, 
+			blinking: blinkingDelayTime.notBlinking
+		});
+		console.log(`communicationWithDevice(): error: ${error.message}`);
+		FileLogger.write(LogLevel.Error, `Bluetooth service - ${error.message}`);
+	}
+}
+
+export const communicationWithDeviceWithoutResponse = (message, dropDownAlertRef) => {
+	if (CONNECTED_DEVICE_CHARACTERISTIC) {
+		CONNECTED_DEVICE_CHARACTERISTIC.writeWithoutResponse(base64.encode(message));
+	} else {
+		dropDownAlertRef.current.alertWithType('error', 'Error', 'No bluetooth connection - control is not possible');
+	}
+}
+
+export const disconnectBluetooth = () => {
+	const actionsSettings = bindActionCreators(ActionsSettings, store.dispatch);
+	const actionsBluetooth = bindActionCreators(ActionsBluetooth, store.dispatch);
+
+	if (!!CONNECTED_DEVICE) {
+		CONNECTED_DEVICE.cancelConnection();
+		CONNECTED_DEVICE = null;
+		CONNECTED_DEVICE_CHARACTERISTIC = null;
+	}
+
+	clearInterval(MONITORING_DEVICE);
+
+	actionsSettings.changeSettingsStatus({bluetoothIsOn: false});
+	actionsBluetooth.changeBluetoothStatus({
+		text: bluetoothText.disconnect, 
+		color: bluetoothColor.failed, 
+		blinking: blinkingDelayTime.notBlinking
+	});
+}
+
 const scanDevices = async (blemanager) => {
 	const actionsBluetooth = bindActionCreators(ActionsBluetooth, store.dispatch);
 	const actionsSettings = bindActionCreators(ActionsSettings, store.dispatch);
@@ -80,7 +139,8 @@ const scanDevices = async (blemanager) => {
 				FileLogger.write(LogLevel.Info, `Bluetooth service - Find Mr Roobot device: ${name} ${id}`);
 				console.log(`scanDevices(): Find Mr Roobot device: ${name} ${id}`);
 				blemanager.stopDeviceScan();
-				connectToDevice(device);
+				CONNECTED_DEVICE = device;
+				connectToDevice();
 			} else if (name !== null && !devicesList.includes(name)) {
 				devicesList.push(name);
 				FileLogger.write(LogLevel.Info, `Bluetooth service - Find device: name=${name} id${id}`);
@@ -100,17 +160,18 @@ const scanDevices = async (blemanager) => {
 	}
 }
 
-const connectToDevice = async (device) => {
+const connectToDevice = async () => {
 	const actionsBluetooth = bindActionCreators(ActionsBluetooth, store.dispatch);
 	const actionsSettings = bindActionCreators(ActionsSettings, store.dispatch);
 
 	try {
-		await device.connect();
-		await device.discoverAllServicesAndCharacteristics();
-		const services = await device.services();
+		await CONNECTED_DEVICE.connect();
+		await CONNECTED_DEVICE.discoverAllServicesAndCharacteristics();
+		const services = await CONNECTED_DEVICE.services();
 		const [controllerService] = services;
 		const characteristics = await controllerService.characteristics();
 		const [controllerCharacteristic] = characteristics;
+		CONNECTED_DEVICE_CHARACTERISTIC = controllerCharacteristic;
 
 		actionsBluetooth.changeBluetoothStatus({
 			text: bluetoothText.connect, 
@@ -118,7 +179,6 @@ const connectToDevice = async (device) => {
 			blinking: blinkingDelayTime.notBlinking
 		});
 
-		CONNECTED_DEVICE = controllerCharacteristic;
 		connectionMonitoring();
 
 	} catch (error) {
@@ -136,7 +196,7 @@ const connectToDevice = async (device) => {
 const connectionMonitoring = () => {
 	const {pingIntervalTime} = config; 
 
-	setInterval(() => {
+	MONITORING_DEVICE = setInterval(() => {
 		if (CONNECTED_DEVICE != null) {
 			communicationWithDevice("ping");
 		}
@@ -170,33 +230,8 @@ const listnerDevice = (error, value) => {
 	}
 }
 
-export const disconnectBluetooth = () => {
-	const actionsBluetooth = bindActionCreators(ActionsBluetooth, store.dispatch);
-	actionsBluetooth.changeBluetoothStatus({
-		text: bluetoothText.disconnect, 
-		color: bluetoothColor.failed, 
-		blinking: blinkingDelayTime.notBlinking
-	});
-}
 
-export const communicationWithDevice = async (message) => {
-	const actionsBluetooth = bindActionCreators(ActionsBluetooth, store.dispatch);
-	const actionsSettings = bindActionCreators(ActionsSettings, store.dispatch);
 
-	try {
-		const response = await CONNECTED_DEVICE.writeWithResponse(base64.encode(message));
-		console.log(response);
-	} catch (error) {
-		actionsSettings.changeSettingsStatus({bluetoothIsOn: false});
-		actionsBluetooth.changeBluetoothStatus({
-			text: bluetoothText.failed, 
-			color: bluetoothColor.failed, 
-			blinking: blinkingDelayTime.notBlinking
-		});
-		console.log(`communicationWithDevice(): error: ${error.message}`);
-		FileLogger.write(LogLevel.Error, `Bluetooth service - ${error.message}`);
-	}
-}
 
 
 

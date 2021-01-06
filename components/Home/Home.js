@@ -1,21 +1,21 @@
-import React, { useRef } from "react";
+import React, {useRef} from "react";
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Main from '../Main/Main.js';
 import Logs from '../Logs/Logs.js';
 import SettingsNavigation from '../SettingsNavigation/SettingsNavigation.js';
 import { SafeAreaView } from 'react-native';
-import DropdownAlert from 'react-native-dropdownalert';
 import { Styles } from './HomeStyles.js';
 import { BOTTOM_MENU } from '../../constans/GlobalConstans.js';
 import { HomeIcon, LogsIcon, SettingsIcon } from '../../icon/SvgIcon.js';
 import { NavigationContainer } from '@react-navigation/native';
+import DropdownAlert from 'react-native-dropdownalert';
 
 const Tab = createBottomTabNavigator();
 
 const Home = () => {
 
-    const dropDownAlertRef = useRef(0);
-
+    const dropDownAlertRef = useRef(null);
+    
     const selectIconToMenu = (route, color, size) => {
         const { name } = route;
 
@@ -43,11 +43,10 @@ const Home = () => {
                         inactiveTintColor: '#808080',
                     }}
                 >
-                    <Tab.Screen name="Home" component={Main} />
+                    <Tab.Screen name="Home" children={() => <Main dropDownAlertRef={dropDownAlertRef} />} />
                     <Tab.Screen name="Logs" component={Logs} />
                     <Tab.Screen name="Settings" component={SettingsNavigation} />
                 </Tab.Navigator>
-                
             </NavigationContainer>
             <DropdownAlert ref={dropDownAlertRef} />
         </SafeAreaView>
