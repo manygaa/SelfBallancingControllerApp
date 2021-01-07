@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback} from 'react';
-import { View, ScrollView, RefreshControl, FlatList } from 'react-native';
+import { View, RefreshControl, FlatList, ActivityIndicator } from 'react-native';
 import { getAllLogs, readFile } from '../../service/LogsService.js';
 import Loader from '../Loader/Loader.js';
 import RNPickerSelect from 'react-native-picker-select';
@@ -15,8 +15,9 @@ const Logs = () => {
 	const [logsContent, setLogsContent] = useState();
 	const [refreshing, setRefreshing] = useState(false);
 	const [currentPath, setCurrentPath] = useState(null);
-
-	let scrollView = useRef(null);
+	const [onEndReachedCalledDuringMomentum, setOnEndReachedCalledDuringMomentum] = useState(true);
+	
+	let flatListRef = useRef();
 
 	useEffect(() => {
 		getLogsFromService();
@@ -26,7 +27,7 @@ const Logs = () => {
 		setRefreshing(true);
 		if (!!currentPath) {
 			const file = await readFile(currentPath);
-			setLogsContent(file.content);
+			setLogsContent(prepareData(file.content));
 			const index = logsFiles.findIndex(file => file.filePath == currentPath);
 			const newData = [...logsFiles];
 			newData[index] = file;
@@ -45,19 +46,68 @@ const Logs = () => {
 
 	const getCurrentLogs = ([firstElement]) => {
 		if (!!firstElement) {
-			setLogsContent(firstElement?.content);
+			setLogsContent(prepareData(firstElement?.content));
 			setCurrentPath(firstElement?.filePath);
 		}
 	}
 
 	const changeData = (value, index) => {
-		setLogsContent(value);
 		if (!!value) {
+			setLogsContent(prepareData(value));
 			setCurrentPath(logsFiles[index].filePath);
 		}
-		
 	}
 
+	const onEndReached = (currentPath, logsFiles) => {
+		setRefreshing(true);
+		if(!onEndReachedCalledDuringMomentum) {
+			refreshLogsFile(currentPath, logsFiles);
+			setOnEndReachedCalledDuringMomentum(true);
+
+		}
+	}
+
+	const prepareData = (content) => {
+		const contentToArray = content.split(/\r?\n/);
+		contentToArray.pop();
+		const items = [];
+
+		for (const [index, row] of contentToArray.entries()) {
+			items.push({
+				id: `${index}`,
+				title: row
+			})
+		}
+		return items;
+	}
+
+	const Item = ({ title }) => (
+		<View>
+		    <ParsedText 
+				style={Styles.logsContentText}
+				parse={
+					[
+						{pattern: /\[INFO\]/, style: Styles.info},
+						{pattern: /\[WARN\]/, style: Styles.warning},
+						{pattern: /\[ERROR\]/, style: Styles.error},
+					]
+				}
+			>
+				{title}
+			</ParsedText>
+		</View>
+	);
+
+	const renderItem = ({ item }) => (
+		<Item title={item.title} />
+	);
+
+	const renderFooter = () => {
+        return refreshing ? <ActivityIndicator
+			size = "large"
+      	/> : null;
+	}
+	
 	return (
 		<View style={Styles.container}>
 			<Loader active={loading} />
@@ -78,27 +128,24 @@ const Logs = () => {
 			: 
 				null
 			}
-			<ScrollView 
-				style={Styles.logsContent}
-				ref={ref => {scrollView = ref}}
-				onContentSizeChange={() => scrollView.scrollToEnd({animated: true})}
-				showsVerticalScrollIndicator={false} 
-				refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => refreshLogsFile(currentPath, logsFiles)} />}
-				>
+			<FlatList
+				ref={ref => flatListRef = ref}
+				onContentSizeChange={() => flatListRef.scrollToEnd({animated: true})}
+				data={logsContent}
+				renderItem={renderItem}
+				keyExtractor={item => item.id}
+				onEndReachedThreshold={-0.1}
+				onEndReached={() => onEndReached(currentPath, logsFiles)}
+				onMomentumScrollBegin={() => { setOnEndReachedCalledDuringMomentum(false)}}
+				ListFooterComponent={() => renderFooter()}
+				refreshControl={
+					<RefreshControl
+					  refreshing={refreshing}
+					  onRefresh={() =>refreshLogsFile(currentPath, logsFiles)}
+					/>
+				  }
 				
-				<ParsedText 
-					style={Styles.logsContentText}
-					parse={
-						[
-							{pattern: /\[INFO\]/, style: Styles.info},
-							{pattern: /\[WARN\]/, style: Styles.warning},
-							{pattern: /\[ERROR\]/, style: Styles.error},
-						]
-					}
-				>
-					{logsContent}
-				</ParsedText>
-			</ScrollView>
+			/>
 		</View>
 	)
 };
