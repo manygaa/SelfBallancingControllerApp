@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback} from 'react';
-import { View, RefreshControl, FlatList, ActivityIndicator } from 'react-native';
+import { View, FlatList, ActivityIndicator } from 'react-native';
 import { getAllLogs, readFile } from '../../service/LogsService.js';
 import Loader from '../Loader/Loader.js';
 import RNPickerSelect from 'react-native-picker-select';
@@ -7,15 +7,15 @@ import ParsedText from 'react-native-parsed-text';
 import { Styles, pickerSelectStyles } from './LogsStyles.js';
 import { selectLogsplaceholder } from '../../constans/LogsConstans.js';
 import { ArrowIcon } from '../../icon/SvgIcon.js';
+import { connect } from 'react-redux';
 
-const Logs = () => {
+const Logs = ({status:{filesList, manualUpdate}}) => {
 
 	const [logsFiles, setLogsFiles] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [logsContent, setLogsContent] = useState();
 	const [refreshing, setRefreshing] = useState(false);
 	const [currentPath, setCurrentPath] = useState(null);
-	const [onEndReachedCalledDuringMomentum, setOnEndReachedCalledDuringMomentum] = useState(true);
 	
 	let flatListRef = useRef();
 
@@ -24,16 +24,17 @@ const Logs = () => {
 	}, []);
 
 	const refreshLogsFile  = useCallback(async (currentPath, logsFiles) => {
-		setRefreshing(true);
-		if (!!currentPath) {
+		const index = logsFiles.findIndex(file => file.filePath == currentPath);
+
+		if (index == 0) {
+			setRefreshing(true);
 			const file = await readFile(currentPath);
 			setLogsContent(prepareData(file.content));
-			const index = logsFiles.findIndex(file => file.filePath == currentPath);
 			const newData = [...logsFiles];
 			newData[index] = file;
-			setLogsFiles(newData);
+			setLogsFiles(newData);	
 		}
-		
+	
 		setRefreshing(false);
 	}, [])
 
@@ -42,6 +43,16 @@ const Logs = () => {
 		setLogsFiles(logs);
 		getCurrentLogs(logs);
 		setLoading(false);
+	}
+
+	const getSelectFilesList = (logsFiles) => {
+		return logsFiles.map((log) => {
+			const {fileShortName, content} = log;
+			return {
+				label: fileShortName,
+				value: content
+			} 
+		})
 	}
 
 	const getCurrentLogs = ([firstElement]) => {
@@ -59,12 +70,7 @@ const Logs = () => {
 	}
 
 	const onEndReached = (currentPath, logsFiles) => {
-		setRefreshing(true);
-		if(!onEndReachedCalledDuringMomentum) {
-			refreshLogsFile(currentPath, logsFiles);
-			setOnEndReachedCalledDuringMomentum(true);
-
-		}
+		refreshLogsFile(currentPath, logsFiles);
 	}
 
 	const prepareData = (content) => {
@@ -103,10 +109,17 @@ const Logs = () => {
 	);
 
 	const renderFooter = () => {
-        return refreshing ? <ActivityIndicator
-			size = "large"
-      	/> : null;
+        return refreshing ? 
+			<View style={Styles.loader}>
+				<ActivityIndicator size = "large"/>
+			</View> : null;
 	}
+
+	const goToEndFile = () => {
+		if (!!logsContent) {
+			flatListRef.scrollToEnd({animated: true});
+		}
+	}	
 	
 	return (
 		<View style={Styles.container}>
@@ -117,37 +130,27 @@ const Logs = () => {
 					placeholder={{...selectLogsplaceholder}}
 					style={{...pickerSelectStyles}}
 					Icon={() => {return <ArrowIcon color="gray" />}}
-					items={logsFiles.map((log) => {
-						const {fileShortName, content} = log;
-						return {
-							label: fileShortName,
-							value: content
-							} 
-						})}
+					items={getSelectFilesList(manualUpdate ? filesList : logsFiles)}
 				/>
 			: 
 				null
 			}
 			<FlatList
 				ref={ref => flatListRef = ref}
-				onContentSizeChange={() => flatListRef.scrollToEnd({animated: true})}
+				onContentSizeChange={() => goToEndFile()}
 				data={logsContent}
 				renderItem={renderItem}
 				keyExtractor={item => item.id}
 				onEndReachedThreshold={-0.1}
 				onEndReached={() => onEndReached(currentPath, logsFiles)}
-				onMomentumScrollBegin={() => { setOnEndReachedCalledDuringMomentum(false)}}
 				ListFooterComponent={() => renderFooter()}
-				refreshControl={
-					<RefreshControl
-					  refreshing={refreshing}
-					  onRefresh={() =>refreshLogsFile(currentPath, logsFiles)}
-					/>
-				  }
-				
 			/>
 		</View>
 	)
 };
 
-export default Logs;
+const mapStateToProps = state => ({
+	status: state.logsReducer
+});
+
+export default connect(mapStateToProps)(Logs);

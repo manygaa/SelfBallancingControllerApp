@@ -1,6 +1,9 @@
 import RNFS from'react-native-fs';
 import { config } from '../config/config.js';
 import { FileLogger, LogLevel } from "react-native-file-logger";
+import { bindActionCreators } from 'redux';
+import store from '../store/ConfigureStore.js';
+import * as ActionsBluetooth from '../actions/Logs.js'
 
 export const getAllLogs = async () => {
     const allFiles = await getFilesList();
@@ -16,13 +19,10 @@ export const getAllLogs = async () => {
             try {
                 const content = await RNFS.readFile(tempFile, 'utf8');
                     if (typeof content === 'string') {
-                        const fileShortName = getFileShortName(tempIsFile);
-
                         readAllFiles.push({
                             content: content,
                             filePath: tempFile,
-                            fileShortName: fileShortName
-                            
+                            fileShortName: getFileShortName(tempIsFile),
                         });
                     }
             } catch (error) {
@@ -42,12 +42,10 @@ export const readFile = async (path) => {
         try {
             const content = await RNFS.readFile(tempFile, 'utf8');
                 if (typeof content === 'string') {
-                    const fileShortName = getFileShortName(tempIsFile);
-
                     const readFile = {
                         content: content,
                         filePath: tempFile,
-                        fileShortName: fileShortName
+                        fileShortName: getFileShortName(tempIsFile)
                         
                     }
 
@@ -60,7 +58,7 @@ export const readFile = async (path) => {
 }
 
 export const getFilesList = async () => {
-    return await RNFS.readDir(`${RNFS.DocumentDirectoryPath}/logs`);
+    return sortFilesByDate(await RNFS.readDir(`${RNFS.DocumentDirectoryPath}/logs`));
 }
 
 export const getFileShortName = (file) => {
@@ -73,11 +71,10 @@ export const runLogger = async () => {
 }
 
 export const removeFile = async (file) => {
-    if (await RNFS.unlink(file.path)) {
+        await RNFS.unlink(file.path);
         FileLogger.write(LogLevel.Info, `Remove file ${getFileShortName(file)}!`);
-    } else {
-        FileLogger.write(LogLevel.Info, `Problem with deleting the file ${getFileShortName(file)}!`);
-    }
+        const actionsLogs = bindActionCreators(ActionsBluetooth, store.dispatch);
+        actionsLogs.updateFilesList({filesList: await getAllLogs(), manualUpdate: true});
 }
 
 const createLogsDirectory = async () => {
@@ -85,4 +82,8 @@ const createLogsDirectory = async () => {
         RNFS.mkdir(`${RNFS.DocumentDirectoryPath}/logs`);
         FileLogger.write(LogLevel.Info, 'Crate logger directory!');
     }
+}
+
+const sortFilesByDate = (logsFiles) => {
+    return logsFiles.sort((a, b) => b.mtime - a.mtime);
 }

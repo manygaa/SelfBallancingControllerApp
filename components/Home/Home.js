@@ -45,7 +45,8 @@ const Home = () => {
                 >
                     <Tab.Screen name="Home" children={() => <Main dropDownAlertRef={dropDownAlertRef} />} />
                     <Tab.Screen name="Logs" component={Logs} />
-                    <Tab.Screen name="Settings" component={SettingsNavigation} />
+                    <Tab.Screen name="Settings" children={() => <SettingsNavigation dropDownAlertRef={dropDownAlertRef} />} />
+                    
                 </Tab.Navigator>
             </NavigationContainer>
             <DropdownAlert ref={dropDownAlertRef} />

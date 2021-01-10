@@ -1,14 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { View, TouchableHighlight, Text, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, TouchableHighlight, Text, TouchableOpacity, RefreshControl } from 'react-native';
 import { SwipeListView } from 'react-native-swipe-list-view';
 import { getFilesList, getFileShortName, removeFile } from '../../service/LogsService.js';
 import Loader from '../Loader/Loader.js';
 import { Styles } from './SettingsLogsStyles.js';
 
-const SettingsLogs = () => {
+const SettingsLogs = ({dropDownAlertRef}) => {
     const [filesList, setFilesList] = useState([]);
     const [filesListMenu, setFilesListMenu] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
 
     useEffect(() => {
         getListFilesFromService();
@@ -20,6 +21,14 @@ const SettingsLogs = () => {
         setFilesListMenu(await prepareDataList(filesList));
         setLoading(false);
     }
+
+    const refreshLogsFileList  = useCallback(async () => {
+		setRefreshing(true);
+        const filesList = await getFilesList();
+        setFilesList(filesList);
+        setFilesListMenu(await prepareDataList(filesList));
+		setRefreshing(false);
+	}, [])
 
     const prepareDataList = async (filesList) => {
         const listFiles = [];
@@ -43,14 +52,18 @@ const SettingsLogs = () => {
     };
 
     const deleteRow = (rowMap, rowKey) => {
-        closeRow(rowMap, rowKey);
-        removeFile(filesList[rowKey]);
-        const newData = [...filesListMenu];
-        const prevIndex = filesListMenu[rowKey].data.findIndex(
-            item => item.key === rowKey
-        );
-        newData[rowKey].data.splice(prevIndex, 1);
-        setFilesListMenu(newData);
+        if (rowKey == 0) {
+            dropDownAlertRef.current.alertWithType('error', 'Error', 'The current log file cannot be deleted');
+        } else {
+            closeRow(rowMap, rowKey);
+            removeFile(filesList[rowKey]);
+            const newData = [...filesListMenu];
+            const prevIndex = filesListMenu[rowKey].data.findIndex(
+                item => item.key === rowKey
+            );
+            newData[rowKey].data.splice(prevIndex, 1);
+            setFilesListMenu(newData);
+        }
     };
 
     const renderItem = (data) => (
@@ -58,9 +71,7 @@ const SettingsLogs = () => {
             style={Styles.rowFront}
             underlayColor={'#AAA'}
         >
-            <View>
-                <Text>{data.item.text}</Text>
-            </View>
+            <Text>{data.item.text}</Text>
         </TouchableHighlight>
     );
 
@@ -79,6 +90,9 @@ const SettingsLogs = () => {
         <>
             <Loader active={loading} />
             <SwipeListView
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={refreshLogsFileList} />
+                }
                 useSectionList
                 sections={filesListMenu}
                 renderItem={renderItem}

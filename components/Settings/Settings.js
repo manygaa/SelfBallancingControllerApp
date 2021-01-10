@@ -4,9 +4,7 @@ import { SectionRow, SettingsPage, NavigateRow, BaseRow, SwitchRow } from 'react
 import { runBluetooth, disconnectBluetooth } from '../../service/BluetoothService.js';
 import { connect } from 'react-redux';
 
-const Settings = ({ navigation, status }) => {
-
-    const {bluetoothIsOn} = status;
+const Settings = ({ navigation, status:{bluetoothIsOn}, dropDownAlertRef}) => {
 
     const showDevMenu = () => {
         NativeModules.DevMenu.show();
@@ -33,7 +31,7 @@ const Settings = ({ navigation, status }) => {
                         name: 'users',
                         type: 'font-awesome',
                     }}
-                    onPress={() => navigation.navigate("Logs")}
+                    onPress={() => navigation.push("Logs", {dropDownAlertRef: dropDownAlertRef})}
                 />
                 <SwitchRow
                     text="Bluetooth"

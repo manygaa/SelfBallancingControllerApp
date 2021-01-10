@@ -217,7 +217,9 @@ const timeoutScan = (blemanager) => {
 		color: bluetoothColor.failed, 
 		blinking: blinkingDelayTime.notBlinking
 	});
+	
 	FileLogger.write(LogLevel.Warning, `Bluetooth service - timeout scan!`);
+	console.log(`timeoutScan(): timeout scan!`);
 }
 
 const monitorDevice = () => {
